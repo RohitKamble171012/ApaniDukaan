@@ -28,7 +28,7 @@ export default function QRPage() {
     setRegenerating(true);
     try {
       const { data } = await import('@/lib/api').then(m => m.shopApi.regenerateQR());
-      setQrData(prev => ({ ...prev, shopUrl: data.shopUrl, dataUrl: data.dataUrl }));
+      setQrData((prev: any) => ({ ...prev, shopUrl: data.shopUrl, dataUrl: data.dataUrl }));
       toast.success('QR regenerated');
     } catch (err: any) { toast.error(err.message); }
     finally { setRegenerating(false); }
