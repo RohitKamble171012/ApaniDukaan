@@ -11,6 +11,7 @@ dotenv.config();
 
 import { connectDB } from './utils/db';
 import { initFirebase } from './utils/firebase';
+import { startKeepAlive } from './utils/keepAlive';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -93,6 +94,7 @@ async function start() {
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+      startKeepAlive(process.env.BACKEND_URL || `http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
