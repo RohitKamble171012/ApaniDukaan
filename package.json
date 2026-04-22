@@ -1,0 +1,15 @@
+{
+  "name": "smart-shop",
+  "version": "1.0.0",
+  "description": "Smart Local Shop Management & Customer Ordering Platform",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "setup": "npm run install:all && echo '\\n✅ All dependencies installed!\\n📝 Copy backend/.env.example to backend/.env\\n📝 Copy frontend/.env.example to frontend/.env.local\\n🚀 Then run: npm run dev:backend and npm run dev:frontend'"
+  },
+  "workspaces": ["backend", "frontend"]
+}
