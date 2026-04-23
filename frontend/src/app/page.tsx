@@ -121,7 +121,7 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-amber-100 py-8 text-center text-warm-400 text-sm">
-        © 2025 SmartShop. Built for local businesses.
+        © 2026 ApaniDukaan. Built for local businesses.
       </footer>
     </main>
   );
