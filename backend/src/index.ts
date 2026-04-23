@@ -23,11 +23,11 @@ import analyticsRoutes from './routes/analytics';
 import feedbackRoutes from './routes/feedback';
 import qrRoutes from './routes/qr';
 import uploadRoutes from './routes/upload';
-app.set('trust proxy', 1); 
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
+app.set('trust proxy', 1); 
 // Security
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
