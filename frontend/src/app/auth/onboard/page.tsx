@@ -120,7 +120,7 @@ export default function OnboardPage() {
           <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
             <ShoppingBag size={20} className="text-white" />
           </div>
-          <span className="font-bold text-white text-xl">SmartShop</span>
+          <span className="font-bold text-white text-xl">ApaniDukaan</span>
         </div>
 
         <div>
