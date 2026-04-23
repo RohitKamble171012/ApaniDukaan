@@ -78,7 +78,7 @@ export default function LoginPage() {
             <div className="w-11 h-11 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-200">
               <ShoppingBag size={22} className="text-white" />
             </div>
-            <span className="font-bold text-2xl text-warm-900">SmartShop</span>
+            <span className="font-bold text-2xl text-warm-900">ApaniDukaan</span>
           </Link>
           <p className="text-warm-400 mt-3 text-sm">
             {isRegister ? 'Create your shopkeeper account' : 'Sign in to your dashboard'}
