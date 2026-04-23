@@ -7,7 +7,7 @@ import { AuthProvider } from '@/components/shared/AuthProvider';
 const inter = Inter({ subsets: ['latin'], variable: '--font-geist-sans' });
 
 export const metadata: Metadata = {
-  title: 'SmartShop — Local Shop Management Platform',
+  title: 'ApaniDukaan — Local Shop Management Platform',
   description: 'Manage your local shop digitally. Products, orders, analytics and customer storefront in one place.',
   keywords: 'local shop, inventory management, orders, QR code shop'
 };
