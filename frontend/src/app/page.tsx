@@ -22,7 +22,7 @@ export default function HomePage() {
           <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-md shadow-amber-200">
             <ShoppingBag size={18} className="text-white" />
           </div>
-          <span className="font-bold text-xl text-warm-900 tracking-tight">SmartShop</span>
+          <span className="font-bold text-xl text-warm-900 tracking-tight">ApaniDukaan</span>
         </div>
         <Link href="/auth/login"
           className="bg-amber-500 hover:bg-amber-400 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-amber-200 hover:shadow-lg hover:shadow-amber-300 hover:-translate-y-0.5">
