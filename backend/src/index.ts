@@ -41,10 +41,22 @@ app.use('/api/', limiter);
 
 // CORS
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_BASE_URL || 'http://localhost:3000',
-    process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000'
-  ],
+  origin: function(origin, callback) {
+    const allowed = [
+      'http://localhost:3000',
+      process.env.FRONTEND_BASE_URL,
+      process.env.NEXT_PUBLIC_FRONTEND_URL,
+    ].filter(Boolean);
+
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // temporarily allow all during debugging
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
