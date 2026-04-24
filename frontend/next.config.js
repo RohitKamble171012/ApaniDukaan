@@ -2,17 +2,16 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      { protocol: 'http', hostname: 'localhost', port: '5000' },
+      { protocol: 'http',  hostname: 'localhost' },
+      { protocol: 'https', hostname: '**.onrender.com' },
+      { protocol: 'https', hostname: '**.vercel.app' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: '**' }
     ]
   },
-  async rewrites() {
-    return [
-      {
-        source: '/uploads/:path*',
-        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/:path*`
-      }
-    ];
+  // Remove the rewrite to backend for uploads — handle via env var in code instead
+  env: {
+    NEXT_PUBLIC_APP_NAME: 'ApaniDukaan'
   }
 };
 
