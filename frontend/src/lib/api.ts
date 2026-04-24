@@ -10,7 +10,6 @@ export const api = axios.create({
   timeout: 30000 // 30s timeout for Render free tier cold starts
 });
 
-export const api = axios.create({ baseURL: API_URL });
 
 // Inject Firebase token automatically
 api.interceptors.request.use(async (config) => {
