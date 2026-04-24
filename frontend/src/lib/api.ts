@@ -1,7 +1,14 @@
 import axios from 'axios';
 import { auth } from './firebase';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 
+                process.env.NEXT_PUBLIC_BACKEND_URL + '/api' || 
+                'http://localhost:5000/api';
+
+export const api = axios.create({ 
+  baseURL: API_URL,
+  timeout: 30000 // 30s timeout for Render free tier cold starts
+});
 
 export const api = axios.create({ baseURL: API_URL });
 
