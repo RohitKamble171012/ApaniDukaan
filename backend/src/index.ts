@@ -44,17 +44,15 @@ app.use(cors({
   origin: function(origin, callback) {
     const allowed = [
       'http://localhost:3000',
+      'https://apanidukaan.live',
+      'https://www.apanidukaan.live',
       process.env.FRONTEND_BASE_URL,
-      process.env.NEXT_PUBLIC_FRONTEND_URL,
     ].filter(Boolean);
 
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowed.includes(origin)) {
+    if (!origin || allowed.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // temporarily allow all during debugging
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
