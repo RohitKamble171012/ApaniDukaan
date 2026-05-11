@@ -6,75 +6,115 @@ import Order from '../models/Order';
 const router = Router();
 
 function getRazorpay() {
-  return new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID!,
-    key_secret: process.env.RAZORPAY_KEY_SECRET!
-  });
+  const keyId     = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret || keyId.includes('dummy')) {
+    throw new Error('RAZORPAY_NOT_CONFIGURED');
+  }
+
+  return new Razorpay({ key_id: keyId, key_secret: keySecret });
 }
 
-// POST /api/payments/create-order - Create Razorpay order
+// ─── CREATE ORDER ─────────────────────────────────────────────────────────────
 router.post('/create-order', async (req: Request, res: Response) => {
   try {
-    const { orderId, amount, currency = 'INR', receipt } = req.body;
+    const { orderId, amount, currency = 'INR' } = req.body;
 
     if (!orderId || !amount) {
       return res.status(400).json({ error: 'orderId and amount are required' });
     }
 
-    const razorpay = getRazorpay();
+    let razorpay: Razorpay;
+    try {
+      razorpay = getRazorpay();
+    } catch {
+      return res.status(503).json({
+        error: 'Online payment is not configured yet. Please use Cash or UPI QR code.',
+        code: 'PAYMENT_NOT_CONFIGURED'
+      });
+    }
 
-    const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // Convert to paise
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const razorpayOrder = await (razorpay as any).orders.create({
+      amount:   Math.round(Number(amount) * 100), // paise
       currency,
-      receipt: receipt || `order_${Date.now()}`,
-      notes: { internalOrderId: orderId }
+      receipt:  `rcpt_${Date.now()}`,
+      notes:    {
+        internalOrderId: orderId,
+        orderNumber:     order.orderNumber,
+        platform:        'ApaniDukaan'
+      }
     });
 
-    // Update order with razorpay order ID
-    await Order.findByIdAndUpdate(orderId, { razorpayOrderId: razorpayOrder.id });
+    await Order.findByIdAndUpdate(orderId, {
+      razorpayOrderId: razorpayOrder.id
+    });
 
     return res.json({
       razorpayOrderId: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-      keyId: process.env.RAZORPAY_KEY_ID
+      amount:          razorpayOrder.amount,   // in paise
+      currency:        razorpayOrder.currency,
+      keyId:           process.env.RAZORPAY_KEY_ID,
+      orderNumber:     order.orderNumber
     });
+
   } catch (err: any) {
-    console.error('Razorpay create order error:', err);
-    return res.status(500).json({ error: 'Payment gateway error. Please try again.' });
+    console.error('Razorpay create-order error:', err?.error || err?.message || err);
+
+    if (err?.error?.description) {
+      return res.status(500).json({ error: `Payment gateway: ${err.error.description}` });
+    }
+    return res.status(500).json({ error: err.message || 'Payment gateway error' });
   }
 });
 
-// POST /api/payments/verify - Verify payment after completion
+// ─── VERIFY PAYMENT ───────────────────────────────────────────────────────────
 router.post('/verify', async (req: Request, res: Response) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderId
+    } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
-      return res.status(400).json({ error: 'All payment verification fields are required' });
+      return res.status(400).json({ error: 'All payment fields are required for verification' });
     }
 
-    // Verify signature
-    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret || secret.includes('dummy')) {
+      return res.status(503).json({ error: 'Payment verification not configured' });
+    }
+
+    // Verify signature — this is the security check
+    const body             = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .createHmac('sha256', secret)
       .update(body)
       .digest('hex');
 
     if (expectedSignature !== razorpay_signature) {
       await Order.findByIdAndUpdate(orderId, { paymentStatus: 'failed' });
-      return res.status(400).json({ error: 'Payment verification failed. Invalid signature.' });
+      return res.status(400).json({ error: 'Payment verification failed — invalid signature' });
     }
 
-    // Update order as paid
+    // Signature valid — mark order as paid
     const order = await Order.findByIdAndUpdate(
       orderId,
       {
-        paymentStatus: 'paid',
+        paymentStatus:     'paid',
         razorpayPaymentId: razorpay_payment_id,
-        orderStatus: 'confirmed',
+        orderStatus:       'confirmed',
         $push: {
-          statusHistory: { status: 'confirmed', timestamp: new Date(), note: 'Payment received via Razorpay' }
+          statusHistory: {
+            status:    'confirmed',
+            timestamp: new Date(),
+            note:      `Payment verified via Razorpay — ${razorpay_payment_id}`
+          }
         }
       },
       { new: true }
@@ -83,52 +123,65 @@ router.post('/verify', async (req: Request, res: Response) => {
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
     return res.json({
-      success: true,
-      message: 'Payment verified successfully',
+      success:     true,
       orderNumber: order.orderNumber,
-      paymentId: razorpay_payment_id
+      paymentId:   razorpay_payment_id,
+      message:     'Payment verified successfully'
     });
+
   } catch (err: any) {
     console.error('Payment verify error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message || 'Verification failed' });
   }
 });
 
-// POST /api/payments/webhook - Razorpay webhook handler
+// ─── WEBHOOK (optional but good to have) ──────────────────────────────────────
 router.post('/webhook', async (req: Request, res: Response) => {
   try {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
     if (webhookSecret) {
-      const signature = req.headers['x-razorpay-signature'];
-      const body = JSON.stringify(req.body);
-      const expectedSig = crypto
+      const signature = req.headers['x-razorpay-signature'] as string;
+      const body      = JSON.stringify(req.body);
+      const expected  = crypto
         .createHmac('sha256', webhookSecret)
         .update(body)
         .digest('hex');
 
-      if (signature !== expectedSig) {
+      if (signature !== expected) {
         return res.status(400).json({ error: 'Invalid webhook signature' });
       }
     }
 
-    const event = req.body;
+    const { event, payload } = req.body;
 
-    if (event.event === 'payment.captured') {
-      const paymentId = event.payload.payment.entity.id;
-      const razorpayOrderId = event.payload.payment.entity.order_id;
-
-      await Order.findOneAndUpdate(
-        { razorpayOrderId },
-        { paymentStatus: 'paid', razorpayPaymentId: paymentId, orderStatus: 'confirmed' }
-      );
+    if (event === 'payment.captured') {
+      const rzpOrderId = payload?.payment?.entity?.order_id;
+      const rzpPayId   = payload?.payment?.entity?.id;
+      if (rzpOrderId) {
+        await Order.findOneAndUpdate(
+          { razorpayOrderId: rzpOrderId },
+          {
+            paymentStatus:     'paid',
+            razorpayPaymentId: rzpPayId,
+            orderStatus:       'confirmed'
+          }
+        );
+      }
     }
 
-    if (event.event === 'payment.failed') {
-      const razorpayOrderId = event.payload.payment.entity.order_id;
-      await Order.findOneAndUpdate({ razorpayOrderId }, { paymentStatus: 'failed' });
+    if (event === 'payment.failed') {
+      const rzpOrderId = payload?.payment?.entity?.order_id;
+      if (rzpOrderId) {
+        await Order.findOneAndUpdate(
+          { razorpayOrderId: rzpOrderId },
+          { paymentStatus: 'failed' }
+        );
+      }
     }
 
     return res.json({ status: 'ok' });
+
   } catch (err: any) {
     console.error('Webhook error:', err);
     return res.status(500).json({ error: err.message });
