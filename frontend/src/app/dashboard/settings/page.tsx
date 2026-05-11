@@ -126,15 +126,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Shop URL */}
-      {shop && (
-        <div className="bg-white border border-amber-100 rounded-xl p-5">
-          <h2 className="font-semibold text-stone-800 text-sm mb-3">Your Shop URL</h2>
-          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 text-amber-600 font-mono text-sm break-all">
-            {process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000'}/shop/{shop.shopSlug}
-          </div>
-          <p className="text-amber-500 text-xs mt-2">This is your permanent shop URL. Share it with customers!</p>
-        </div>
-      )}
+      
     </div>
   );
 }
