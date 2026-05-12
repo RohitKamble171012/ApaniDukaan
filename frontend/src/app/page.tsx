@@ -120,9 +120,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-amber-100 py-8 text-center text-warm-400 text-sm">
-        © 2026 ApaniDukaan. Built for local businesses.
-      </footer>
+      <footer className="border-t border-amber-100 py-8">
+  <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <p className="text-warm-500 text-sm">© 2025 ApaniDukaan. Built for local businesses.</p>
+    <div className="flex gap-6 text-sm">
+      <Link href="/privacy" className="text-warm-400 hover:text-amber-600 transition-colors">Privacy Policy</Link>
+      <Link href="/terms"   className="text-warm-400 hover:text-amber-600 transition-colors">Terms of Service</Link>
+      <Link href="/refunds" className="text-warm-400 hover:text-amber-600 transition-colors">Refund Policy</Link>
+      <Link href="/contact" className="text-warm-400 hover:text-amber-600 transition-colors">Contact Us</Link>
+    </div>
+  </div>
+</footer>
     </main>
   );
 }
